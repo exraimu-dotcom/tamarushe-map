@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TAMARUSHE夏 衛星配置図</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Hiragino Sans', sans-serif; background: #1a1a2e; }
+
+    h1 {
+      text-align: center;
+      color: white;
+      padding: 10px;
+      font-size: 18px;
+      background: linear-gradient(135deg, #e53935, #ff8f00);
+    }
+
+    #map { height: calc(100vh - 100px); width: 100%; }
+
+    .info-panel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.85);
+      color: white;
+      padding: 8px 16px;
+      font-size: 12px;
+      text-align: center;
+      z-index: 1000;
+    }
+
+    /* カスタムマーカー */
+    .marker-food { background: #e53935 !important; }
+    .marker-shop { background: #1e88e5 !important; }
+    .marker-exp  { background: #43a047 !important; }
+    .marker-special { background: #8e24aa !important; }
+    .marker-facility { background: #ff8f00 !important; }
+
+    .custom-marker {
+      border-radius: 50%;
+      border: 2px solid white;
+      color: white;
+      font-size: 9px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      cursor: pointer;
+      line-height: 1;
+      text-align: center;
+    }
+
+    .leaflet-popup-content {
+      font-size: 13px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🦆 TAMARUSHE夏 2026.6.21 衛星配置図｜たまき水辺の楽校</h1>
+
+<div id="map"></div>
+
+<div class="info-panel">
+  🔴飲食 &nbsp; 🔵物販・作家 &nbsp; 🟢体験・WS &nbsp; 🟣スペシャル &nbsp; 🟠施設 &nbsp;｜ マーカーをドラッグで移動
+  &nbsp;&nbsp;
+  <button onclick="savePositions()" style="background:#ff8f00;color:white;border:none;padding:6px 14px;border-radius:6px;font-weight:bold;cursor:pointer;">📍 現在の位置を保存</button>
+</div>
+
+<div id="saved-output" style="display:none;position:fixed;top:50px;left:50%;transform:translateX(-50%);background:white;border:2px solid #333;border-radius:10px;padding:16px;z-index:2000;max-width:90%;max-height:60vh;overflow-y:auto;">
+  <b>📋 現在の座標（クロードに貼り付けてください）</b><br><br>
+  <textarea id="coords-text" style="width:100%;height:200px;font-size:11px;"></textarea><br>
+  <button onclick="document.getElementById('saved-output').style.display='none'" style="margin-top:8px;padding:6px 16px;background:#333;color:white;border:none;border-radius:6px;cursor:pointer;">閉じる</button>
+</div>
+
+<script>
+  // 地図初期化（衛星写真）
+  const map = L.map('map', {
+    center: [34.4730, 136.6653],
+    zoom: 18,
+    maxZoom: 20
+  });
+
+  // 衛星写真タイル（Esri World Imagery）
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles © Esri',
+    maxZoom: 20
+  }).addTo(map);
+
+  // ラベルオーバーレイ
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 20,
+    opacity: 0.6
+  }).addTo(map);
+
+  // マーカー作成関数
+  function makeMarker(lat, lng, num, name, content, type) {
+    const colors = {
+      food: '#e53935',
+      shop: '#1e88e5',
+      exp:  '#43a047',
+      special: '#8e24aa',
+      facility: '#ff8f00'
+    };
+    const color = colors[type] || '#888';
+    const size = type === 'facility' ? 23 : 18;
+
+    const icon = L.divIcon({
+      className: '',
+      html: `<div class="custom-marker" style="width:${size}px;height:${size}px;background:${color};font-size:${type==='facility'?'8px':'9px'};">${num}</div>`,
+      iconSize: [size, size],
+      iconAnchor: [size/2, size/2]
+    });
+
+    const marker = L.marker([lat, lng], { icon, draggable: true });
+    marker.bindPopup(`<b>${num}. ${name}</b><br>${content}`, { maxWidth: 200 });
+    marker.addTo(map);
+
+    // ドラッグ中はポップアップを閉じる
+    marker.on('dragstart', () => marker.closePopup());
+    // ドラッグ終了時に座標をコンソールに出力（位置保存用）
+    marker.on('dragend', (e) => {
+      const pos = e.target.getLatLng();
+      console.log(`${num} ${name}: [${pos.lat.toFixed(5)}, ${pos.lng.toFixed(5)}]`);
+    });
+
+    return marker;
+  }
+
+  // ===== 施設 =====
+  makeMarker(34.47355, 136.66620, 'ENTRANCE', 'ENTRANCE', '会場入口', 'facility');
+  makeMarker(34.47348, 136.66570, '本部', '本部', 'スタッフ本部', 'facility');
+  makeMarker(34.47338, 136.66610, '🦆', 'アヒルレース受付', 'アヒルレース受付所', 'facility');
+  makeMarker(34.47358, 136.66560, '🗑', 'ゴミ箱', 'ゴミ回収ポイント', 'facility');
+  makeMarker(34.47370, 136.66430, 'Free', 'フリースペース', 'デイキャンプ・ピクニックエリア', 'facility');
+  makeMarker(34.47290, 136.66600, '🅿', '駐車場', '無料駐車場', 'facility');
+
+  // ===== 北側（川沿い）1〜13番 =====
+  // 東→西へ並ぶ
+  const topStores = [
+    [34.47360, 136.66620, 1,  '伊勢タコス商店', '松坂牛入りタコス', 'food'],
+    [34.47362, 136.66605, 2,  'お食事処おぐら', 'からあげ・焼きそば', 'food'],
+    [34.47364, 136.66590, 3,  '近江牛西村', '近江牛ハンバーガー', 'food'],
+    [34.47365, 136.66575, 4,  '伊勢浜焼亭', '出汁唐揚げ・イカ焼き', 'food'],
+    [34.47366, 136.66560, 5,  '豊ちゃんコロッケ', 'コロッケ・揚げ物', 'food'],
+    [34.47367, 136.66545, 6,  'チムニーカフェ', '軽食・ドリンク', 'food'],
+    [34.47368, 136.66530, 7,  'お炭の鯛ちゃん', 'お炭付き鯛料理', 'food'],
+    [34.47368, 136.66515, 8,  'キッチンクラッフェ', 'だし巻き卵料理', 'food'],
+    [34.47369, 136.66500, 9,  'ぶるスジ家', 'カレー・ぶるドッグ', 'food'],
+    [34.47369, 136.66485, 10, 'たこ焼き8739', 'たこ焼き', 'food'],
+    [34.47369, 136.66470, 11, 'N2Hフードトラック', 'ジャークチキン', 'food'],
+    [34.47369, 136.66455, 12, 'むすびやとく', 'おむすび', 'food'],
+    [34.47369, 136.66440, 13, 'ブルキッチン', 'からあげ・ポテト', 'food'],
+  ];
+
+  // ===== 南側（道路沿い）14〜50番 =====
+  // 西→東へ並ぶ
+  const bottomStores = [
+    [34.47315, 136.66440, 14, 'GLAD', 'プルドポークサンド', 'food'],
+    [34.47315, 136.66455, 15, '甘味処山作', 'さわもち等', 'food'],
+    [34.47315, 136.66470, 16, 'HANGOUT', 'ホットサンド', 'food'],
+    [34.47315, 136.66485, 17, 'ありんこ茶々', '紅ショウガ天など', 'food'],
+    [34.47315, 136.66500, 18, '伊勢環寿', '松阪牛カレー', 'food'],
+    [34.47315, 136.66515, 19, 'ミライエ牛肉店', 'サイコロステーキ', 'food'],
+    [34.47315, 136.66530, 20, '丸八食品', 'みそ焼きうどん', 'food'],
+    [34.47315, 136.66545, 21, 'milkbase', '大内山アイス・シェイク', 'food'],
+    [34.47315, 136.66560, 22, '万屋城', '鯛おにぎり', 'food'],
+    [34.47315, 136.66575, 23, 'MividaLoca', 'シシカバブ', 'food'],
+    [34.47315, 136.66590, 24, 'ポット夫人', 'クレープ', 'food'],
+    [34.47315, 136.66605, 25, '日乃屋カレー明和店', 'カレー・カレーパン', 'food'],
+    [34.47315, 136.66615, 26, 'メマサン', '苔テラリウム', 'shop'],
+    [34.47320, 136.66620, 27, '住友生命', '健康チェック', 'shop'],
+    [34.47325, 136.66622, 28, 'クラフト雑貨kokoro', '作家販売', 'shop'],
+    [34.47330, 136.66622, 29, 'フロッグカフェ', 'ワークショップ', 'exp'],
+    [34.47335, 136.66622, 30, 'TENTEN', '作家販売', 'shop'],
+    [34.47340, 136.66622, 31, 'おかぴー', '作家販売', 'shop'],
+    [34.47310, 136.66440, 32, 'luxury', '作家販売', 'shop'],
+    [34.47310, 136.66455, 33, 'メナード松阪大黒田', '美容体験', 'exp'],
+    [34.47310, 136.66470, 34, 'スマイルのっち', 'ワークショップ', 'exp'],
+    [34.47310, 136.66485, 35, '缶バッジおじさん', 'ワークショップ', 'exp'],
+    [34.47310, 136.66500, 36, '尋刻', 'ワークショップ', 'exp'],
+    [34.47310, 136.66515, 37, 'Shi_cyan', '作家販売', 'shop'],
+    [34.47310, 136.66530, 38, 'ジューン&コー', '作家販売', 'shop'],
+    [34.47310, 136.66545, 39, "Lover'z", 'わんちゃん作家販売', 'shop'],
+    [34.47310, 136.66560, 40, 'STEVEN', '健康体験', 'exp'],
+    [34.47310, 136.66575, 41, '糸かけ屋さんゆるほわ', '作家販売', 'shop'],
+    [34.47310, 136.66590, 42, 'alulu', '作家販売', 'shop'],
+    [34.47310, 136.66605, 43, 'lealea', 'カイロプラクティック', 'exp'],
+    [34.47305, 136.66440, 44, '2525marche', 'エア遊具', 'exp'],
+    [34.47305, 136.66460, 45, 'ハピトラ', 'トランポリン', 'exp'],
+    [34.47305, 136.66480, 46, '甘味処桜', 'くじ引き', 'shop'],
+    [34.47305, 136.66500, 47, 'SUNNY', '漢方アロマ', 'shop'],
+    [34.47305, 136.66520, 48, 'YUSEIFARM', '農園直販売', 'food'],
+    [34.47305, 136.66540, 49, 'HANGVibs', '作家販売', 'shop'],
+    [34.47305, 136.66560, 50, 'こがつら池動物パーク', 'ふれあい動物園', 'special'],
+  ];
+
+  const allMarkers = [];
+  [...topStores, ...bottomStores].forEach(s => {
+    allMarkers.push({ marker: makeMarker(...s), num: s[2], name: s[3] });
+  });
+
+  function savePositions() {
+    let out = '';
+    allMarkers.forEach(m => {
+      const p = m.marker.getLatLng();
+      out += `[${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}, ${m.num}, '${m.name}'],\n`;
+    });
+    document.getElementById('coords-text').value = out;
+    document.getElementById('saved-output').style.display = 'block';
+  }
+</script>
+</body>
+</html>
