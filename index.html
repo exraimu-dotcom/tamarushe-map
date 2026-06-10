@@ -1,49 +1,42 @@
 ﻿<!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TAMARUSHE夏 配置マップ</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%;display:flex;flex-direction:column;font-family:sans-serif}
-    .header{background:linear-gradient(135deg,#e53935,#ff8f00);color:#fff;text-align:center;padding:10px;font-size:16px;font-weight:bold}
-    .header small{font-size:11px;display:block;opacity:.9}
-    #map{flex:1}
-    .legend{background:rgba(0,0,0,.8);color:#fff;padding:6px;font-size:11px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-    .legend span{display:flex;align-items:center;gap:3px}
-    .dot{width:11px;height:11px;border-radius:50%;display:inline-block}
-    .custom-marker{border-radius:50%;border:2px solid #fff;color:#fff;font-weight:bold;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.5);cursor:pointer;font-size:9px;line-height:1;text-align:center}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAMARUSHE夏 配置マップ</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+body{margin:0;padding:0;font-family:sans-serif;}
+#header{background:linear-gradient(135deg,#e53935,#ff8f00);color:#fff;text-align:center;padding:10px;font-size:15px;font-weight:bold;position:fixed;top:0;left:0;right:0;z-index:1000;}
+#header small{font-size:11px;display:block;}
+#map{position:absolute;top:60px;bottom:40px;left:0;right:0;}
+#legend{background:rgba(0,0,0,0.8);color:#fff;padding:5px;font-size:11px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;position:fixed;bottom:0;left:0;right:0;z-index:1000;}
+.legend span{display:flex;align-items:center;gap:3px;}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+.mk{border-radius:50%;border:2px solid #fff;color:#fff;font-weight:bold;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,0.5);font-size:9px;text-align:center;line-height:1;}
+</style>
 </head>
 <body>
-<div class="header">🦆 TAMARUSHE夏 2026.6.21 配置マップ<small>たまき水辺の楽校 ｜ タップで店舗情報</small></div>
+<div id="header">🦆 TAMARUSHE夏 2026.6.21 配置マップ<small>たまき水辺の楽校 ｜ マーカーをタップで店舗情報</small></div>
 <div id="map"></div>
-<div class="legend">
-  <span><span class="dot" style="background:#e53935"></span>飲食</span>
-  <span><span class="dot" style="background:#1e88e5"></span>物販</span>
-  <span><span class="dot" style="background:#43a047"></span>体験</span>
-  <span><span class="dot" style="background:#8e24aa"></span>特別</span>
-  <span><span class="dot" style="background:#ff8f00"></span>施設</span>
+<div id="legend">
+<span><span class="dot" style="background:#e53935"></span>飲食</span>
+<span><span class="dot" style="background:#1e88e5"></span>物販</span>
+<span><span class="dot" style="background:#43a047"></span>体験</span>
+<span><span class="dot" style="background:#8e24aa"></span>特別</span>
+<span><span class="dot" style="background:#ff8f00"></span>施設</span>
 </div>
 <script>
-var map=L.map('map',{center:[34.4730,136.6653],zoom:18,maxZoom:21,zoomSnap:0.5});
-
-// 衛星写真（国土地理院・日本全国対応）
+var map=L.map('map').setView([34.4737,136.6657],18);
 L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg',{
-  attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>',
-  maxNativeZoom:17,
-  maxZoom:21,
-  tileSize:256
+  attribution:'国土地理院',maxNativeZoom:17,maxZoom:20
 }).addTo(map);
-
-function mk(lat,lng,num,name,info,type){
-  var c={food:'#e53935',shop:'#1e88e5',exp:'#43a047',special:'#8e24aa',facility:'#ff8f00'}[type]||'#888';
-  var s=type==='facility'?24:20;
-  var icon=L.divIcon({className:'',html:'<div class="custom-marker" style="width:'+s+'px;height:'+s+'px;background:'+c+';">'+num+'</div>',iconSize:[s,s],iconAnchor:[s/2,s/2]});
-  L.marker([lat,lng],{icon:icon}).bindPopup('<b>'+num+'. '+name+'</b><br>'+info).addTo(map);
+function mk(la,lo,n,nm,inf,t){
+  var c={food:'#e53935',shop:'#1e88e5',exp:'#43a047',special:'#8e24aa',facility:'#ff8f00'}[t]||'#888';
+  var s=t==='facility'?26:22;
+  L.marker([la,lo],{icon:L.divIcon({className:'',html:'<div class="mk" style="width:'+s+'px;height:'+s+'px;background:'+c+';">'+n+'</div>',iconSize:[s,s],iconAnchor:[s/2,s/2]})})
+  .bindPopup('<b>'+n+'. '+nm+'</b><br><span style="color:#555">'+inf+'</span>').addTo(map);
 }
 mk(34.47355,136.66620,'IN','ENTRANCE','会場入口','facility');
 mk(34.47348,136.66570,'本部','本部','スタッフ本部','facility');
