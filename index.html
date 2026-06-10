@@ -29,13 +29,20 @@
   <span><span class="dot" style="background:#ff8f00"></span>施設</span>
 </div>
 <script>
-var map=L.map('map',{center:[34.4730,136.6653],zoom:19,maxZoom:20});
-L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg',{attribution:'国土地理院',maxZoom:22,maxNativeZoom:18}).addTo(map);
+var map=L.map('map',{center:[34.4730,136.6653],zoom:18,maxZoom:21,zoomSnap:0.5});
+
+// 衛星写真（国土地理院・日本全国対応）
+L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg',{
+  attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>',
+  maxNativeZoom:17,
+  maxZoom:21,
+  tileSize:256
+}).addTo(map);
 
 function mk(lat,lng,num,name,info,type){
   var c={food:'#e53935',shop:'#1e88e5',exp:'#43a047',special:'#8e24aa',facility:'#ff8f00'}[type]||'#888';
   var s=type==='facility'?24:20;
-  var icon=L.divIcon({className:'',html:'<div class="custom-marker" style="width:'+s+'px;height:'+s+'px;background:'+c+'">'+num+'</div>',iconSize:[s,s],iconAnchor:[s/2,s/2]});
+  var icon=L.divIcon({className:'',html:'<div class="custom-marker" style="width:'+s+'px;height:'+s+'px;background:'+c+';">'+num+'</div>',iconSize:[s,s],iconAnchor:[s/2,s/2]});
   L.marker([lat,lng],{icon:icon}).bindPopup('<b>'+num+'. '+name+'</b><br>'+info).addTo(map);
 }
 mk(34.47355,136.66620,'IN','ENTRANCE','会場入口','facility');
