@@ -30,7 +30,7 @@
 </div>
 <script>
 var map=L.map('map',{center:[34.4730,136.6653],zoom:19,maxZoom:20});
-L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri',maxZoom:20}).addTo(map);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri',maxZoom:22,maxNativeZoom:19}).addTo(map);
 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:20,opacity:.6}).addTo(map);
 function mk(lat,lng,num,name,info,type){
   var c={food:'#e53935',shop:'#1e88e5',exp:'#43a047',special:'#8e24aa',facility:'#ff8f00'}[type]||'#888';
