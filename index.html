@@ -1,99 +1,210 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TAMARUSHE夏 配置マップ</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<style>
-body{margin:0;padding:0;font-family:sans-serif;}
-#header{background:linear-gradient(135deg,#e53935,#ff8f00);color:#fff;text-align:center;padding:10px;font-size:15px;font-weight:bold;position:fixed;top:0;left:0;right:0;z-index:1000;}
-#header small{font-size:11px;display:block;}
-#map{position:absolute;top:60px;bottom:40px;left:0;right:0;}
-#legend{background:rgba(0,0,0,0.8);color:#fff;padding:5px;font-size:11px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;position:fixed;bottom:0;left:0;right:0;z-index:1000;}
-.legend span{display:flex;align-items:center;gap:3px;}
-.dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
-.mk{border-radius:50%;border:2px solid #fff;color:#fff;font-weight:bold;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,0.5);font-size:9px;text-align:center;line-height:1;}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TAMARUSHE夏 衛星配置図</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Hiragino Sans', sans-serif; background: #1a1a2e; }
+
+    h1 {
+      text-align: center;
+      color: white;
+      padding: 10px;
+      font-size: 18px;
+      background: linear-gradient(135deg, #e53935, #ff8f00);
+    }
+
+    #map { height: calc(100vh - 100px); width: 100%; }
+
+    .info-panel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.85);
+      color: white;
+      padding: 8px 16px;
+      font-size: 12px;
+      text-align: center;
+      z-index: 1000;
+    }
+
+    /* カスタムマーカー */
+    .marker-food { background: #e53935 !important; }
+    .marker-shop { background: #1e88e5 !important; }
+    .marker-exp  { background: #43a047 !important; }
+    .marker-special { background: #8e24aa !important; }
+    .marker-facility { background: #ff8f00 !important; }
+
+    .custom-marker {
+      border-radius: 50%;
+      border: 2px solid white;
+      color: white;
+      font-size: 9px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      cursor: pointer;
+      line-height: 1;
+      text-align: center;
+    }
+
+    .leaflet-popup-content {
+      font-size: 13px;
+      line-height: 1.6;
+    }
+  </style>
 </head>
 <body>
-<div id="header">🦆 TAMARUSHE夏 2026.6.21 配置マップ<small>たまき水辺の楽校 ｜ マーカーをタップで店舗情報</small></div>
+
+<h1>🦆 TAMARUSHE夏 2026.6.21 衛星配置図｜たまき水辺の楽校</h1>
+
 <div id="map"></div>
-<div id="legend">
-<span><span class="dot" style="background:#e53935"></span>飲食</span>
-<span><span class="dot" style="background:#1e88e5"></span>物販</span>
-<span><span class="dot" style="background:#43a047"></span>体験</span>
-<span><span class="dot" style="background:#8e24aa"></span>特別</span>
-<span><span class="dot" style="background:#ff8f00"></span>施設</span>
+
+<div class="info-panel">
+  🔴飲食 &nbsp; 🔵物販・作家 &nbsp; 🟢体験・WS &nbsp; 🟣スペシャル &nbsp; 🟠施設 &nbsp;｜ マーカーをドラッグで移動
+  &nbsp;&nbsp;
+  <button onclick="savePositions()" style="background:#ff8f00;color:white;border:none;padding:6px 14px;border-radius:6px;font-weight:bold;cursor:pointer;">📍 現在の位置を保存</button>
 </div>
+
+<div id="saved-output" style="display:none;position:fixed;top:50px;left:50%;transform:translateX(-50%);background:white;border:2px solid #333;border-radius:10px;padding:16px;z-index:2000;max-width:90%;max-height:60vh;overflow-y:auto;">
+  <b>📋 現在の座標（クロードに貼り付けてください）</b><br><br>
+  <textarea id="coords-text" style="width:100%;height:200px;font-size:11px;"></textarea><br>
+  <button onclick="document.getElementById('saved-output').style.display='none'" style="margin-top:8px;padding:6px 16px;background:#333;color:white;border:none;border-radius:6px;cursor:pointer;">閉じる</button>
+</div>
+
 <script>
-var map=L.map('map').setView([34.4737,136.6657],18);
-L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg',{
-  attribution:'国土地理院',maxNativeZoom:17,maxZoom:20
-}).addTo(map);
-function mk(la,lo,n,nm,inf,t){
-  var c={food:'#e53935',shop:'#1e88e5',exp:'#43a047',special:'#8e24aa',facility:'#ff8f00'}[t]||'#888';
-  var s=t==='facility'?26:22;
-  L.marker([la,lo],{icon:L.divIcon({className:'',html:'<div class="mk" style="width:'+s+'px;height:'+s+'px;background:'+c+';">'+n+'</div>',iconSize:[s,s],iconAnchor:[s/2,s/2]})})
-  .bindPopup('<b>'+n+'. '+nm+'</b><br><span style="color:#555">'+inf+'</span>').addTo(map);
-}
-mk(34.47355,136.66620,'IN','ENTRANCE','会場入口','facility');
-mk(34.47348,136.66570,'本部','本部','スタッフ本部','facility');
-mk(34.47338,136.66610,'🦆','アヒルレース受付','アヒルレース受付','facility');
-mk(34.47358,136.66560,'🗑','ゴミ箱','ゴミ回収','facility');
-mk(34.47370,136.66430,'F','フリースペース','デイキャンプ・ピクニック','facility');
-mk(34.47290,136.66600,'P','駐車場','無料駐車場','facility');
-mk(34.47325,136.66515,1,'伊勢タコス商店','松坂牛入りタコス','food');
-mk(34.47322,136.66521,2,'お食事処おぐら','からあげ・焼きそば','food');
-mk(34.47320,136.66529,3,'近江牛西村','近江牛ハンバーガー','food');
-mk(34.47320,136.66541,4,'伊勢浜焼亭','出汁唐揚げ・イカ焼き','food');
-mk(34.47321,136.66549,5,'豊ちゃんコロッケ','コロッケ・揚げ物','food');
-mk(34.47324,136.66556,6,'チムニーカフェ','軽食・ドリンク','food');
-mk(34.47327,136.66563,7,'お炭の鯛ちゃん','鯛料理','food');
-mk(34.47331,136.66569,8,'キッチンクラッフェ','だし巻き卵料理','food');
-mk(34.47334,136.66575,9,'ぶるスジ家','カレー・ぶるドッグ','food');
-mk(34.47338,136.66581,10,'たこ焼き8739','たこ焼き','food');
-mk(34.47341,136.66587,11,'N2Hフードトラック','ジャークチキン','food');
-mk(34.47344,136.66592,12,'むすびやとく','おむすび','food');
-mk(34.47348,136.66597,13,'ブルキッチン','からあげ・ポテト','food');
-mk(34.47350,136.66603,14,'GLAD','プルドポークサンド','food');
-mk(34.47354,136.66608,15,'甘味処山作','さわもち等','food');
-mk(34.47357,136.66613,16,'HANGOUT','ホットサンド','food');
-mk(34.47361,136.66617,17,'ありんこ茶々','紅ショウガ天','food');
-mk(34.47365,136.66621,18,'伊勢環寿','松阪牛カレー','food');
-mk(34.47369,136.66625,19,'ミライエ牛肉店','サイコロステーキ','food');
-mk(34.47373,136.66630,20,'丸八食品','みそ焼きうどん','food');
-mk(34.47376,136.66635,21,'milkbase','大内山アイス','food');
-mk(34.47381,136.66638,22,'万屋城','鯛おにぎり','food');
-mk(34.47387,136.66638,23,'MividaLoca','シシカバブ','food');
-mk(34.47392,136.66637,24,'ポット夫人','クレープ','food');
-mk(34.47397,136.66634,25,'日乃屋カレー明和店','カレー','food');
-mk(34.47402,136.66630,26,'メマサン','苔テラリウム','shop');
-mk(34.47403,136.66625,27,'住友生命','健康チェック','shop');
-mk(34.47403,136.66619,28,'クラフト雑貨kokoro','作家販売','shop');
-mk(34.47403,136.66613,29,'フロッグカフェ','ワークショップ','exp');
-mk(34.47402,136.66607,30,'TENTEN','作家販売','shop');
-mk(34.47400,136.66600,31,'おかぴー','作家販売','shop');
-mk(34.47397,136.66594,32,'luxury','作家販売','shop');
-mk(34.47395,136.66588,33,'メナード松阪大黒田','美容体験','exp');
-mk(34.47392,136.66582,34,'スマイルのっち','ワークショップ','exp');
-mk(34.47390,136.66576,35,'缶バッジおじさん','ワークショップ','exp');
-mk(34.47387,136.66571,36,'尋刻','ワークショップ','exp');
-mk(34.47383,136.66564,37,'Shi_cyan','作家販売','shop');
-mk(34.47380,136.66558,38,'ジューン＆コー','作家販売','shop');
-mk(34.47378,136.66552,39,'Loverz','わんちゃん作家販売','shop');
-mk(34.47375,136.66546,40,'STEVEN','健康体験','exp');
-mk(34.47373,136.66539,41,'糸かけ屋さんゆるほわ','作家販売','shop');
-mk(34.47370,136.66534,42,'alulu','作家販売','shop');
-mk(34.47368,136.66528,43,'lealea','カイロプラクティック','exp');
-mk(34.47365,136.66522,44,'2525marche','エア遊具','exp');
-mk(34.47364,136.66516,45,'ハピトラ','トランポリン','exp');
-mk(34.47361,136.66511,46,'甘味処桜','くじ引き','shop');
-mk(34.47359,136.66505,47,'SUNNY','漢方アロマ','shop');
-mk(34.47357,136.66499,48,'YUSEIFARM','農園直販売','food');
-mk(34.47354,136.66494,49,'HANGVibs','作家販売','shop');
-mk(34.47350,136.66491,50,'こがつら池動物パーク','ふれあい動物園','special');
+  // 地図初期化（衛星写真）
+  const map = L.map('map', {
+    center: [34.4730, 136.6653],
+    zoom: 18,
+    maxZoom: 20
+  });
+
+  // 衛星写真タイル（国土地理院・日本全国対応・高ズームでも表示）
+  L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg', {
+    attribution: '国土地理院',
+    maxNativeZoom: 17,
+    maxZoom: 21
+  }).addTo(map);
+
+  // マーカー作成関数
+  function makeMarker(lat, lng, num, name, content, type) {
+    const colors = {
+      food: '#e53935',
+      shop: '#1e88e5',
+      exp:  '#43a047',
+      special: '#8e24aa',
+      facility: '#ff8f00'
+    };
+    const color = colors[type] || '#888';
+    const size = type === 'facility' ? 23 : 18;
+
+    const icon = L.divIcon({
+      className: '',
+      html: `<div class="custom-marker" style="width:${size}px;height:${size}px;background:${color};font-size:${type==='facility'?'8px':'9px'};">${num}</div>`,
+      iconSize: [size, size],
+      iconAnchor: [size/2, size/2]
+    });
+
+    const marker = L.marker([lat, lng], { icon, draggable: true });
+    marker.bindPopup(`<b>${num}. ${name}</b><br>${content}`, { maxWidth: 200 });
+    marker.addTo(map);
+
+    // ドラッグ中はポップアップを閉じる
+    marker.on('dragstart', () => marker.closePopup());
+    // ドラッグ終了時に座標をコンソールに出力（位置保存用）
+    marker.on('dragend', (e) => {
+      const pos = e.target.getLatLng();
+      console.log(`${num} ${name}: [${pos.lat.toFixed(5)}, ${pos.lng.toFixed(5)}]`);
+    });
+
+    return marker;
+  }
+
+  // ===== 施設 =====
+  makeMarker(34.47355, 136.66620, 'ENTRANCE', 'ENTRANCE', '会場入口', 'facility');
+  makeMarker(34.47348, 136.66570, '本部', '本部', 'スタッフ本部', 'facility');
+  makeMarker(34.47338, 136.66610, '🦆', 'アヒルレース受付', 'アヒルレース受付所', 'facility');
+  makeMarker(34.47358, 136.66560, '🗑', 'ゴミ箱', 'ゴミ回収ポイント', 'facility');
+  makeMarker(34.47370, 136.66430, 'Free', 'フリースペース', 'デイキャンプ・ピクニックエリア', 'facility');
+  makeMarker(34.47290, 136.66600, '🅿', '駐車場', '無料駐車場', 'facility');
+
+  // ===== 確定位置データ =====
+  const topStores = [];
+  const bottomStores = [
+    [34.47325, 136.66515, 1,  '伊勢タコス商店', '松坂牛入りタコス', 'food'],
+    [34.47322, 136.66521, 2,  'お食事処おぐら', 'からあげ・焼きそば', 'food'],
+    [34.47320, 136.66529, 3,  '近江牛西村', '近江牛ハンバーガー', 'food'],
+    [34.47320, 136.66541, 4,  '伊勢浜焼亭', '出汁唐揚げ・イカ焼き', 'food'],
+    [34.47321, 136.66549, 5,  '豊ちゃんコロッケ', 'コロッケ・揚げ物', 'food'],
+    [34.47324, 136.66556, 6,  'チムニーカフェ', '軽食・ドリンク', 'food'],
+    [34.47327, 136.66563, 7,  'お炭の鯛ちゃん', 'お炭付き鯛料理', 'food'],
+    [34.47331, 136.66569, 8,  'キッチンクラッフェ', 'だし巻き卵料理', 'food'],
+    [34.47334, 136.66575, 9,  'ぶるスジ家', 'カレー・ぶるドッグ', 'food'],
+    [34.47338, 136.66581, 10, 'たこ焼き8739', 'たこ焼き', 'food'],
+    [34.47341, 136.66587, 11, 'N2Hフードトラック', 'ジャークチキン', 'food'],
+    [34.47344, 136.66592, 12, 'むすびやとく', 'おむすび', 'food'],
+    [34.47348, 136.66597, 13, 'ブルキッチン', 'からあげ・ポテト', 'food'],
+    [34.47350, 136.66603, 14, 'GLAD', 'プルドポークサンド', 'food'],
+    [34.47354, 136.66608, 15, '甘味処山作', 'さわもち等', 'food'],
+    [34.47357, 136.66613, 16, 'HANGOUT', 'ホットサンド', 'food'],
+    [34.47361, 136.66617, 17, 'ありんこ茶々', '紅ショウガ天など', 'food'],
+    [34.47365, 136.66621, 18, '伊勢環寿', '松阪牛カレー', 'food'],
+    [34.47369, 136.66625, 19, 'ミライエ牛肉店', 'サイコロステーキ', 'food'],
+    [34.47373, 136.66630, 20, '丸八食品', 'みそ焼きうどん', 'food'],
+    [34.47376, 136.66635, 21, 'milkbase', '大内山アイス・シェイク', 'food'],
+    [34.47381, 136.66638, 22, '万屋城', '鯛おにぎり', 'food'],
+    [34.47387, 136.66638, 23, 'MividaLoca', 'シシカバブ', 'food'],
+    [34.47392, 136.66637, 24, 'ポット夫人', 'クレープ', 'food'],
+    [34.47397, 136.66634, 25, '日乃屋カレー明和店', 'カレー・カレーパン', 'food'],
+    [34.47402, 136.66630, 26, 'メマサン', '苔テラリウム', 'shop'],
+    [34.47403, 136.66625, 27, '住友生命', '健康チェック', 'shop'],
+    [34.47403, 136.66619, 28, 'クラフト雑貨kokoro', '作家販売', 'shop'],
+    [34.47403, 136.66613, 29, 'フロッグカフェ', 'ワークショップ', 'exp'],
+    [34.47402, 136.66607, 30, 'TENTEN', '作家販売', 'shop'],
+    [34.47400, 136.66600, 31, 'おかぴー', '作家販売', 'shop'],
+    [34.47397, 136.66594, 32, 'luxury', '作家販売', 'shop'],
+    [34.47395, 136.66588, 33, 'メナード松阪大黒田', '美容体験', 'exp'],
+    [34.47392, 136.66582, 34, 'スマイルのっち', 'ワークショップ', 'exp'],
+    [34.47390, 136.66576, 35, '缶バッジおじさん', 'ワークショップ', 'exp'],
+    [34.47387, 136.66571, 36, '尋刻', 'ワークショップ', 'exp'],
+    [34.47383, 136.66564, 37, 'Shi_cyan', '作家販売', 'shop'],
+    [34.47380, 136.66558, 38, 'ジューン&コー', '作家販売', 'shop'],
+    [34.47378, 136.66552, 39, "Lover'z", 'わんちゃん作家販売', 'shop'],
+    [34.47375, 136.66546, 40, 'STEVEN', '健康体験', 'exp'],
+    [34.47373, 136.66539, 41, '糸かけ屋さんゆるほわ', '作家販売', 'shop'],
+    [34.47370, 136.66534, 42, 'alulu', '作家販売', 'shop'],
+    [34.47368, 136.66528, 43, 'lealea', 'カイロプラクティック', 'exp'],
+    [34.47365, 136.66522, 44, '2525marche', 'エア遊具', 'exp'],
+    [34.47364, 136.66516, 45, 'ハピトラ', 'トランポリン', 'exp'],
+    [34.47361, 136.66511, 46, '甘味処桜', 'くじ引き', 'shop'],
+    [34.47359, 136.66505, 47, 'SUNNY', '漢方アロマ', 'shop'],
+    [34.47357, 136.66499, 48, 'YUSEIFARM', '農園直販売', 'food'],
+    [34.47354, 136.66494, 49, 'HANGVibs', '作家販売', 'shop'],
+    [34.47350, 136.66491, 50, 'こがつら池動物パーク', 'ふれあい動物園', 'special'],
+  ];
+
+  const allMarkers = [];
+  [...topStores, ...bottomStores].forEach(s => {
+    allMarkers.push({ marker: makeMarker(...s), num: s[2], name: s[3] });
+  });
+
+  function savePositions() {
+    let out = '';
+    allMarkers.forEach(m => {
+      const p = m.marker.getLatLng();
+      out += `[${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}, ${m.num}, '${m.name}'],\n`;
+    });
+    document.getElementById('coords-text').value = out;
+    document.getElementById('saved-output').style.display = 'block';
+  }
 </script>
 </body>
 </html>
