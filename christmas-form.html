@@ -434,6 +434,10 @@
   // ===== 公式LINEの設定（@から始まるベーシックIDに差し替えてください）=====
   const LINE_ID = '@115ohbhg';
 
+  // ===== 申込データの送信先（Google Apps Script のウェブアプリURL）=====
+  // 設定方法は christmas-form-gas.js を参照。空のままだと送信されません。
+  const GAS_URL = '';
+
   // 友だち追加ボタン・QRコードにLINEのURLを設定
   const lineBasicId = LINE_ID.replace(/^@/, '');
   document.querySelectorAll('[data-line-link]').forEach(a => {
@@ -513,12 +517,31 @@
     window.scrollTo(0, 0);
   }
 
-  // 送信先は未定（Googleフォーム／スプレッドシート連携などに差し替え予定）
-  function sendEntry() {
-    alert('【仮フォーム】送信先はまだ設定されていません。\n入力内容は送信されていません。');
-    document.getElementById('confirm').style.display = 'none';
-    document.getElementById('done').style.display = 'block';
-    window.scrollTo(0, 0);
+  // 申込内容を Google スプレッドシートへ送信
+  async function sendEntry() {
+    const btn = document.querySelector('.btn-send');
+    if (!GAS_URL) {
+      alert('【仮フォーム】送信先（GAS_URL）がまだ設定されていません。\n入力内容は送信されていません。');
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = '送信中…';
+    try {
+      // text/plain で送ると CORS のプリフライトが発生しない
+      await fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(Object.fromEntries(collect()))
+      });
+      document.getElementById('confirm').style.display = 'none';
+      document.getElementById('done').style.display = 'block';
+      window.scrollTo(0, 0);
+    } catch (err) {
+      alert('送信できませんでした。通信環境を確認して、もう一度お試しください。');
+      btn.disabled = false;
+      btn.textContent = 'この内容で申し込む';
+    }
   }
 </script>
 </body>
