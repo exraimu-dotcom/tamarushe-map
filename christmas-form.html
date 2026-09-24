@@ -143,6 +143,39 @@
     .btn-back { background: #ddd; }
     .btn-send { background: #c62828; color: white; }
 
+    /* 公式LINE */
+    .line-box {
+      background: white;
+      border: 2px solid #06c755;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 14px;
+      text-align: center;
+      font-size: 14px;
+    }
+    .line-box h2 { font-size: 15px; color: #06a045; margin-bottom: 6px; }
+    .line-btn {
+      display: inline-block;
+      background: #06c755;
+      color: white;
+      font-weight: bold;
+      text-decoration: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+    .line-btn:hover { background: #05a847; }
+    .line-qr { display: block; width: 140px; height: 140px; margin: 12px auto 0; }
+    .line-qr-note { font-size: 12px; color: #666; }
+    /* スマホではQRを隠してボタンのみ */
+    @media (max-width: 600px) {
+      .line-qr, .line-qr-note { display: none; }
+    }
+
+    #done { display: none; text-align: center; }
+    #done h2 { color: #1b5e20; font-size: 20px; margin: 12px 0; }
+    #done p { font-size: 14px; margin-bottom: 16px; }
+
     footer { text-align: center; font-size: 13px; color: #555; padding: 20px; }
   </style>
 </head>
@@ -165,7 +198,7 @@
       <h2>開催概要</h2>
       <dl>
         <dt>開催日</dt><dd>2026年12月12日（土）・13日（日）</dd>
-        <dt>開催時間</dt><dd>16:00〜20:00</dd>
+        <dt>開催時間</dt><dd>15:00〜20:00</dd>
         <dt>会場</dt><dd>田丸駅前</dd>
         <dt>募集店舗数</dt><dd>約30店舗</dd>
       </dl>
@@ -196,9 +229,9 @@
     <section class="info">
       <h2>搬入・搬出</h2>
       <dl>
-        <dt>搬入</dt><dd>14:00〜15:30</dd>
-        <dt>営業準備完了</dt><dd>15:45まで</dd>
-        <dt>開催</dt><dd>16:00〜20:00</dd>
+        <dt>搬入</dt><dd>13:00〜14:30</dd>
+        <dt>営業準備完了</dt><dd>14:45まで</dd>
+        <dt>開催</dt><dd>15:00〜20:00</dd>
         <dt>搬出</dt><dd>20:00〜21:00</dd>
       </dl>
       <p class="note">※開催時間中の車両移動はできません。</p>
@@ -211,6 +244,14 @@
 
     <div class="deadline">出店申込期限：2026年10月15日</div>
     <p class="deadline-note">申込多数の場合は、出店内容等をもとに主催者側で調整させていただく場合があります。<br>申込完了＝出店確定ではありません。</p>
+
+    <div class="line-box">
+      <h2>公式LINEを友だち追加してください</h2>
+      <p>出店可否のご連絡や当日のご案内は公式LINEからお送りします。</p>
+      <a class="line-btn" data-line-link href="#" target="_blank" rel="noopener">LINEで友だち追加</a>
+      <img class="line-qr" data-line-qr alt="公式LINE 友だち追加QRコード">
+      <div class="line-qr-note">パソコンの方はQRコードを読み取ってください</div>
+    </div>
 
     <h2 class="form-title">出店申し込みフォーム</h2>
 
@@ -369,6 +410,18 @@
       <button type="button" class="btn-send" onclick="sendEntry()">この内容で申し込む</button>
     </div>
   </div>
+
+  <!-- ===== 申込完了画面 ===== -->
+  <div id="done">
+    <h2>🎄 お申し込みありがとうございます 🎄</h2>
+    <p>出店可否は、主催者側で調整のうえ公式LINEからご連絡します。<br>
+       まだの方は、必ず公式LINEを友だち追加してください。</p>
+    <div class="line-box">
+      <a class="line-btn" data-line-link href="#" target="_blank" rel="noopener">LINEで友だち追加</a>
+      <img class="line-qr" data-line-qr alt="公式LINE 友だち追加QRコード">
+      <div class="line-qr-note">パソコンの方はQRコードを読み取ってください</div>
+    </div>
+  </div>
 </main>
 
 <footer>
@@ -378,6 +431,19 @@
 </footer>
 
 <script>
+  // ===== 公式LINEの設定（@から始まるベーシックIDに差し替えてください）=====
+  const LINE_ID = '@xxxxxxxx';
+
+  // 友だち追加ボタン・QRコードにLINEのURLを設定
+  const lineBasicId = LINE_ID.replace(/^@/, '');
+  document.querySelectorAll('[data-line-link]').forEach(a => {
+    a.href = 'https://line.me/R/ti/p/' + encodeURIComponent(LINE_ID);
+  });
+  document.querySelectorAll('[data-line-qr]').forEach(img => {
+    img.onerror = () => { img.style.display = 'none'; };
+    img.src = 'https://qr-official.line.me/sid/L/' + lineBasicId + '.png';
+  });
+
   const form = document.getElementById('entry-form');
 
   // 「あり」などを選んだときだけ追加入力欄を表示する
@@ -450,6 +516,9 @@
   // 送信先は未定（Googleフォーム／スプレッドシート連携などに差し替え予定）
   function sendEntry() {
     alert('【仮フォーム】送信先はまだ設定されていません。\n入力内容は送信されていません。');
+    document.getElementById('confirm').style.display = 'none';
+    document.getElementById('done').style.display = 'block';
+    window.scrollTo(0, 0);
   }
 </script>
 </body>
