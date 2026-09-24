@@ -115,6 +115,17 @@
     .sub-field { display: none; margin-top: 8px; }
     .sub-field.show { display: block; }
 
+    .field.invalid label.title { color: #c62828; }
+    .field.invalid input[type=text], .field.invalid input[type=email], .field.invalid input[type=tel],
+    .field.invalid textarea { border: 2px solid #c62828; background: #fff5f5; }
+    .field.invalid .choices { outline: 2px solid #c62828; outline-offset: 4px; border-radius: 4px; }
+    .error-box {
+      display: none;
+      background: #fff5f5; border: 2px solid #c62828; color: #b71c1c;
+      border-radius: 8px; padding: 10px 14px; margin: 12px 0 4px; font-size: 14px;
+    }
+    .error-box ul { margin: 4px 0 0 1.2em; }
+
     .agree {
       background: #fff8e1; border-radius: 8px; padding: 12px; font-size: 13px;
     }
@@ -397,6 +408,7 @@
         </div>
       </fieldset>
 
+      <div class="error-box" id="form-error"></div>
       <button type="submit" class="submit">入力内容を確認する</button>
     </form>
   </div>
@@ -405,6 +417,7 @@
   <div id="confirm">
     <h2>入力内容の確認</h2>
     <table id="confirm-table"></table>
+    <div class="error-box" id="send-error"></div>
     <div class="btn-row">
       <button type="button" class="btn-back" onclick="backToForm()">修正する</button>
       <button type="button" class="btn-send" onclick="sendEntry()">この内容で申し込む</button>
@@ -459,23 +472,39 @@
   }
   form.addEventListener('change', updateSubFields);
 
-  // 必須チェック（未入力の項目名を返す）
+  // 必須チェック（未入力の項目を { name, el } の配列で返す）
   function findMissing() {
     const missing = [];
     form.querySelectorAll('input[required], textarea[required]').forEach(el => {
-      if (!el.value.trim()) missing.push(el.name);
+      if (!el.value.trim()) missing.push({ name: el.name, el });
     });
     form.querySelectorAll('[data-required]').forEach(group => {
-      if (!group.querySelector('input:checked')) missing.push(group.dataset.required);
+      if (!group.querySelector('input:checked')) missing.push({ name: group.dataset.required, el: group });
     });
     form.querySelectorAll('[data-required-if]').forEach(el => {
       const shown = document.getElementById(el.dataset.requiredIf).classList.contains('show');
-      if (shown && !el.value.trim()) missing.push(el.name);
+      if (shown && !el.value.trim()) missing.push({ name: el.name, el });
     });
     const email = document.getElementById('email');
-    if (email.value && !email.checkValidity()) missing.push('メールアドレス（形式が正しくありません）');
+    if (email.value && !email.checkValidity()) missing.push({ name: 'メールアドレス（形式が正しくありません）', el: email });
     return missing;
   }
+
+  // ポップアップ（alert）はアプリ内ブラウザ等で表示されないことがあるため、画面内にメッセージを出す
+  function showMessage(box, html) {
+    box.innerHTML = html;
+    box.style.display = html ? 'block' : 'none';
+  }
+
+  // 入力し直したら、その項目の赤枠を消す
+  form.addEventListener('input', e => {
+    const field = e.target.closest('.field');
+    if (field) field.classList.remove('invalid');
+  });
+  form.addEventListener('change', e => {
+    const field = e.target.closest('.field');
+    if (field) field.classList.remove('invalid');
+  });
 
   // フォーム内容を [項目名, 値] の配列にまとめる（非表示の追加入力欄は除く）
   function collect() {
@@ -492,11 +521,17 @@
 
   form.addEventListener('submit', e => {
     e.preventDefault();
+    const errorBox = document.getElementById('form-error');
+    form.querySelectorAll('.field.invalid').forEach(f => f.classList.remove('invalid'));
     const missing = findMissing();
     if (missing.length) {
-      alert('以下の項目を入力してください：\n・' + missing.join('\n・'));
+      missing.forEach(m => m.el.closest('.field').classList.add('invalid'));
+      showMessage(errorBox, '<b>未入力の項目があります</b><ul>' +
+        missing.map(m => '<li>' + m.name + '</li>').join('') + '</ul>');
+      missing[0].el.closest('.field').scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
+    showMessage(errorBox, '');
     const table = document.getElementById('confirm-table');
     table.innerHTML = '';
     collect().forEach(([k, v]) => {
@@ -520,10 +555,12 @@
   // 申込内容を Google スプレッドシートへ送信
   async function sendEntry() {
     const btn = document.querySelector('.btn-send');
+    const sendError = document.getElementById('send-error');
     if (!GAS_URL) {
-      alert('【仮フォーム】送信先（GAS_URL）がまだ設定されていません。\n入力内容は送信されていません。');
+      showMessage(sendError, '送信先（GAS_URL）がまだ設定されていません。入力内容は送信されていません。');
       return;
     }
+    showMessage(sendError, '');
     btn.disabled = true;
     btn.textContent = '送信中…';
     try {
@@ -538,7 +575,7 @@
       document.getElementById('done').style.display = 'block';
       window.scrollTo(0, 0);
     } catch (err) {
-      alert('送信できませんでした。通信環境を確認して、もう一度お試しください。');
+      showMessage(sendError, '送信できませんでした。通信環境を確認して、もう一度お試しください。');
       btn.disabled = false;
       btn.textContent = 'この内容で申し込む';
     }
