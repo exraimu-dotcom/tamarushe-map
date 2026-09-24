@@ -409,7 +409,7 @@
       </fieldset>
 
       <div class="error-box" id="form-error"></div>
-      <button type="submit" class="submit">入力内容を確認する</button>
+      <button type="button" class="submit" id="to-confirm">入力内容を確認する</button>
     </form>
   </div>
 
@@ -519,8 +519,12 @@
     return [...map.entries()];
   }
 
-  form.addEventListener('submit', e => {
-    e.preventDefault();
+  // フォームの submit イベントは埋め込み表示（sandbox）等でブロックされることがあるため、
+  // ボタンのクリックで確認画面へ進める。Enterキーでの送信は止める。
+  form.addEventListener('submit', e => e.preventDefault());
+  document.getElementById('to-confirm').addEventListener('click', goConfirm);
+
+  function goConfirm() {
     const errorBox = document.getElementById('form-error');
     form.querySelectorAll('.field.invalid').forEach(f => f.classList.remove('invalid'));
     const missing = findMissing();
@@ -544,7 +548,7 @@
     document.getElementById('form-area').style.display = 'none';
     document.getElementById('confirm').style.display = 'block';
     window.scrollTo(0, 0);
-  });
+   }
 
   function backToForm() {
     document.getElementById('confirm').style.display = 'none';
