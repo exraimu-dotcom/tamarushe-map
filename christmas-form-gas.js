@@ -26,6 +26,11 @@ const NOTIFY_EMAIL = '';
 
 const SHEET_NAME = '申込一覧';
 
+// 動作確認用：ウェブアプリのURLをブラウザで開くと、このメッセージが表示される
+function doGet() {
+  return ContentService.createTextOutput('受付スクリプトは動いています（' + SpreadsheetApp.getActiveSpreadsheet().getName() + '）');
+}
+
 function doPost(e) {
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
