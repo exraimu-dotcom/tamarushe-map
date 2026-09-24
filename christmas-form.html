@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>田丸駅前クリスマスマーケット 出店申し込み</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: #f6f1e7;
+      color: #2b2b2b;
+      line-height: 1.7;
+    }
+
+    header {
+      background: linear-gradient(135deg, #b71c1c, #1b5e20);
+      color: white;
+      text-align: center;
+      padding: 28px 16px 24px;
+    }
+    header h1 { font-size: 22px; letter-spacing: 0.05em; }
+    header p { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+
+    main { max-width: 680px; margin: 0 auto; padding: 20px 16px 60px; }
+
+    .notice {
+      background: white;
+      border-left: 5px solid #c62828;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+    .notice dt { font-weight: bold; float: left; width: 5.5em; }
+    .notice dd { margin-left: 5.5em; }
+
+    fieldset {
+      background: white;
+      border: none;
+      border-radius: 10px;
+      padding: 18px 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    legend {
+      font-weight: bold;
+      font-size: 15px;
+      color: #1b5e20;
+      padding: 0 6px;
+      background: white;
+      border-radius: 6px;
+    }
+
+    .field { margin-top: 14px; }
+    .field:first-of-type { margin-top: 4px; }
+    label.title { display: block; font-weight: bold; font-size: 14px; margin-bottom: 4px; }
+    .req {
+      background: #c62828; color: white; font-size: 11px;
+      padding: 1px 6px; border-radius: 4px; margin-left: 6px; font-weight: normal;
+    }
+    .hint { font-size: 12px; color: #666; margin-bottom: 4px; }
+
+    input[type=text], input[type=email], input[type=tel], input[type=number], select, textarea {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: #fff;
+      font-family: inherit;
+    }
+    textarea { min-height: 90px; resize: vertical; }
+    input:focus, select:focus, textarea:focus { outline: 2px solid #2e7d32; border-color: #2e7d32; }
+
+    .choices { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+    .choices label { font-size: 14px; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+    .choices input { width: 18px; height: 18px; }
+
+    .agree {
+      background: #fff8e1; border-radius: 8px; padding: 12px; font-size: 13px;
+    }
+    .agree ul { margin: 6px 0 10px 1.2em; }
+
+    button.submit {
+      display: block; width: 100%;
+      background: #c62828; color: white;
+      font-size: 17px; font-weight: bold;
+      border: none; border-radius: 10px;
+      padding: 14px; cursor: pointer;
+      margin-top: 8px;
+    }
+    button.submit:hover { background: #a31515; }
+
+    #confirm { display: none; }
+    #confirm h2 { color: #1b5e20; font-size: 18px; margin-bottom: 10px; }
+    #confirm table { width: 100%; border-collapse: collapse; background: white; font-size: 14px; }
+    #confirm th, #confirm td { border-bottom: 1px solid #eee; padding: 8px; text-align: left; vertical-align: top; }
+    #confirm th { width: 36%; background: #f1f8e9; white-space: nowrap; }
+    #confirm td { white-space: pre-wrap; word-break: break-all; }
+    .btn-row { display: flex; gap: 8px; margin-top: 14px; }
+    .btn-row button {
+      flex: 1; padding: 12px; border: none; border-radius: 8px;
+      font-size: 15px; font-weight: bold; cursor: pointer;
+    }
+    .btn-back { background: #ddd; }
+    .btn-send { background: #c62828; color: white; }
+
+    footer { text-align: center; font-size: 12px; color: #777; padding: 20px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎄 田丸駅前クリスマスマーケット 🎄</h1>
+  <p>出店申し込みフォーム（仮）</p>
+</header>
+
+<main>
+  <div id="form-area">
+    <dl class="notice">
+      <dt>開催日</dt><dd>2026年12月19日（土）・20日（日）※仮</dd>
+      <dt>時間</dt><dd>11:00〜19:00（予定）</dd>
+      <dt>会場</dt><dd>JR田丸駅前 広場</dd>
+      <dt>出店料</dt><dd>1区画 ○○○○円／日（予定）</dd>
+      <dt>締切</dt><dd>2026年11月○日（○）</dd>
+    </dl>
+
+    <form id="entry-form" novalidate>
+      <!-- ===== 出店者情報 ===== -->
+      <fieldset>
+        <legend>① 出店者情報</legend>
+
+        <div class="field">
+          <label class="title" for="shop">屋号・店舗名<span class="req">必須</span></label>
+          <input type="text" id="shop" name="屋号・店舗名" required>
+        </div>
+
+        <div class="field">
+          <label class="title" for="name">代表者氏名<span class="req">必須</span></label>
+          <input type="text" id="name" name="代表者氏名" required>
+        </div>
+
+        <div class="field">
+          <label class="title" for="kana">フリガナ</label>
+          <input type="text" id="kana" name="フリガナ">
+        </div>
+
+        <div class="field">
+          <label class="title" for="tel">電話番号（当日連絡がつく番号）<span class="req">必須</span></label>
+          <input type="tel" id="tel" name="電話番号" required placeholder="090-1234-5678">
+        </div>
+
+        <div class="field">
+          <label class="title" for="email">メールアドレス<span class="req">必須</span></label>
+          <input type="email" id="email" name="メールアドレス" required>
+        </div>
+
+        <div class="field">
+          <label class="title" for="address">住所</label>
+          <input type="text" id="address" name="住所" placeholder="三重県度会郡玉城町…">
+        </div>
+
+        <div class="field">
+          <label class="title" for="sns">SNS・ホームページ</label>
+          <div class="hint">告知の際に紹介させていただく場合があります</div>
+          <input type="text" id="sns" name="SNS・ホームページ" placeholder="Instagram @xxxx など">
+        </div>
+      </fieldset>
+
+      <!-- ===== 出店内容 ===== -->
+      <fieldset>
+        <legend>② 出店内容</legend>
+
+        <div class="field">
+          <label class="title">出店希望日<span class="req">必須</span></label>
+          <div class="choices" data-required="出店希望日">
+            <label><input type="checkbox" name="出店希望日" value="12/19（土）"> 12/19（土）</label>
+            <label><input type="checkbox" name="出店希望日" value="12/20（日）"> 12/20（日）</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="title">出店ジャンル<span class="req">必須</span></label>
+          <div class="choices" data-required="出店ジャンル">
+            <label><input type="radio" name="出店ジャンル" value="飲食"> 飲食</label>
+            <label><input type="radio" name="出店ジャンル" value="物販・作家"> 物販・作家</label>
+            <label><input type="radio" name="出店ジャンル" value="体験・ワークショップ"> 体験・ワークショップ</label>
+            <label><input type="radio" name="出店ジャンル" value="その他"> その他</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="title" for="items">販売・提供内容<span class="req">必須</span></label>
+          <div class="hint">メニュー・商品名と価格帯をご記入ください</div>
+          <textarea id="items" name="販売・提供内容" required placeholder="例）ホットワイン 600円、シュトーレン 800円〜"></textarea>
+        </div>
+
+        <div class="field">
+          <label class="title" for="xmas">クリスマス限定メニュー・企画</label>
+          <textarea id="xmas" name="クリスマス限定メニュー・企画" placeholder="クリスマスらしい商品や演出があればご記入ください"></textarea>
+        </div>
+      </fieldset>
+
+      <!-- ===== 設備・搬入 ===== -->
+      <fieldset>
+        <legend>③ 設備・搬入</legend>
+
+        <div class="field">
+          <label class="title">出店形態<span class="req">必須</span></label>
+          <div class="choices" data-required="出店形態">
+            <label><input type="radio" name="出店形態" value="テント（持参）"> テント（持参）</label>
+            <label><input type="radio" name="出店形態" value="テント（レンタル希望）"> テント（レンタル希望）</label>
+            <label><input type="radio" name="出店形態" value="キッチンカー"> キッチンカー</label>
+            <label><input type="radio" name="出店形態" value="テーブルのみ"> テーブルのみ</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="title" for="size">使用スペース（間口×奥行）</label>
+          <input type="text" id="size" name="使用スペース" placeholder="例）3m × 3m">
+        </div>
+
+        <div class="field">
+          <label class="title">火気の使用<span class="req">必須</span></label>
+          <div class="choices" data-required="火気の使用">
+            <label><input type="radio" name="火気の使用" value="あり"> あり</label>
+            <label><input type="radio" name="火気の使用" value="なし"> なし</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="title">電源の使用<span class="req">必須</span></label>
+          <div class="choices" data-required="電源の使用">
+            <label><input type="radio" name="電源の使用" value="不要"> 不要</label>
+            <label><input type="radio" name="電源の使用" value="発電機持参"> 発電機持参</label>
+            <label><input type="radio" name="電源の使用" value="電源希望"> 電源希望</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="title" for="watt">使用電力（電源希望の場合）</label>
+          <input type="text" id="watt" name="使用電力" placeholder="例）1500W（電気ケトル）">
+        </div>
+
+        <div class="field">
+          <label class="title" for="cars">搬入車両の台数</label>
+          <input type="number" id="cars" name="搬入車両の台数" min="0" max="5" value="1">
+        </div>
+
+        <div class="field">
+          <label class="title">営業許可（飲食の方）</label>
+          <div class="choices">
+            <label><input type="radio" name="営業許可" value="取得済み"> 取得済み</label>
+            <label><input type="radio" name="営業許可" value="申請中"> 申請中</label>
+            <label><input type="radio" name="営業許可" value="該当なし"> 該当なし</label>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- ===== その他 ===== -->
+      <fieldset>
+        <legend>④ その他</legend>
+
+        <div class="field">
+          <label class="title" for="how">このイベントを知ったきっかけ</label>
+          <select id="how" name="知ったきっかけ">
+            <option value="">選択してください</option>
+            <option>Instagram</option>
+            <option>チラシ・ポスター</option>
+            <option>知人の紹介</option>
+            <option>過去に出店したことがある（TAMARUSHE等）</option>
+            <option>その他</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="title" for="note">ご質問・ご要望</label>
+          <textarea id="note" name="ご質問・ご要望"></textarea>
+        </div>
+
+        <div class="field agree">
+          <b>出店規約（仮）</b>
+          <ul>
+            <li>ゴミは各自お持ち帰りください</li>
+            <li>雨天時は小雨決行・荒天中止（中止時の出店料の扱いは別途ご案内）</li>
+            <li>出店場所は主催者にて決定します</li>
+            <li>出店中の事故・盗難について主催者は責任を負いかねます</li>
+          </ul>
+          <div class="choices" data-required="規約への同意">
+            <label><input type="checkbox" name="規約への同意" value="同意する"> 上記規約に同意する<span class="req">必須</span></label>
+          </div>
+        </div>
+      </fieldset>
+
+      <button type="submit" class="submit">入力内容を確認する</button>
+    </form>
+  </div>
+
+  <!-- ===== 確認画面 ===== -->
+  <div id="confirm">
+    <h2>入力内容の確認</h2>
+    <table id="confirm-table"></table>
+    <div class="btn-row">
+      <button type="button" class="btn-back" onclick="backToForm()">修正する</button>
+      <button type="button" class="btn-send" onclick="sendEntry()">この内容で申し込む</button>
+    </div>
+  </div>
+</main>
+
+<footer>主催：○○○○（仮）｜お問い合わせ：xxxx@example.com</footer>
+
+<script>
+  const form = document.getElementById('entry-form');
+
+  // 必須チェック（未入力の項目名を返す）
+  function findMissing() {
+    const missing = [];
+    form.querySelectorAll('input[required], textarea[required]').forEach(el => {
+      if (!el.value.trim()) missing.push(el.name);
+    });
+    form.querySelectorAll('[data-required]').forEach(group => {
+      if (!group.querySelector('input:checked')) missing.push(group.dataset.required);
+    });
+    const email = document.getElementById('email');
+    if (email.value && !email.checkValidity()) missing.push('メールアドレス（形式が正しくありません）');
+    return missing;
+  }
+
+  // フォーム内容を [項目名, 値] の配列にまとめる
+  function collect() {
+    const map = new Map();
+    new FormData(form).forEach((v, k) => {
+      if (!v) return;
+      map.set(k, map.has(k) ? map.get(k) + '、' + v : v);
+    });
+    return [...map.entries()];
+  }
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const missing = findMissing();
+    if (missing.length) {
+      alert('以下の項目を入力してください：\n・' + missing.join('\n・'));
+      return;
+    }
+    const table = document.getElementById('confirm-table');
+    table.innerHTML = '';
+    collect().forEach(([k, v]) => {
+      const tr = table.insertRow();
+      const th = document.createElement('th');
+      th.textContent = k;
+      tr.appendChild(th);
+      tr.insertCell().textContent = v;
+    });
+    document.getElementById('form-area').style.display = 'none';
+    document.getElementById('confirm').style.display = 'block';
+    window.scrollTo(0, 0);
+  });
+
+  function backToForm() {
+    document.getElementById('confirm').style.display = 'none';
+    document.getElementById('form-area').style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  // 送信先は未定（Googleフォーム／スプレッドシート連携などに差し替え予定）
+  function sendEntry() {
+    alert('【仮フォーム】送信先はまだ設定されていません。\n入力内容は送信されていません。');
+  }
+</script>
+</body>
+</html>
